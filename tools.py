@@ -1,39 +1,36 @@
 from langchain_community.tools import TavilySearchResults
-from langchain_community.tools.tavily_search import TavilySearchAPIWrapper
 from langchain_community.document_loaders import WebBaseLoader, PyPDFLoader
-from langchain.tools import Tool
+from langchain_core.tools import Tool
 from langchain_openai import ChatOpenAI
 from langchain.chains.summarize import load_summarize_chain
 from langchain.docstore.document import Document
-from config import TAVILY_API_KEY, DEFAULT_LLM_MODEL
-import requests
+from crewai.tools import BaseTool
+from config import DEFAULT_LLM_MODEL
 from bs4 import BeautifulSoup
 import os
 
-# Web search tool
-def setup_search_tool():
-    search = TavilySearchResults(api_wrapper=TavilySearchAPIWrapper(tavily_api_key=TAVILY_API_KEY))
-    return Tool(
-        name="web_search",
-        description="Search the web for information. Input should be a search query.",
-        func=search.invoke
-    )
 
-# Web content extraction tool
-def extract_content_from_url(url):
-    try:
-        loader = WebBaseLoader(url)
-        docs = loader.load()
-        return docs[0].page_content
-    except Exception as e:
-        return f"Error extracting content: {str(e)}"
+class SearchTool(BaseTool):
+    name: str = "web_search"
+    description: str = "Search the web for information. Input should be a search query."
 
-def setup_web_extraction_tool():
-    return Tool(
-        name="web_extractor",
-        description="Extract content from a web page. Input should be a URL.",
-        func=extract_content_from_url
-    )
+    def _run(self, query: str) -> str:
+        search = TavilySearchResults()
+        response = search.invoke(query)
+        return response
+
+
+class WebExtractor(BaseTool):
+    name: str = "web_extractor"
+    description: str = "Extract content from a web page. Input should be a URL."
+
+    def _run(self, url: str) -> str:
+        try:
+            loader = WebBaseLoader(url)
+            docs = loader.load()
+            return docs[0].page_content
+        except Exception as e:
+            return f"Error extracting content: {str(e)}"
 
 # PDF extraction tool
 def extract_content_from_pdf(pdf_path):
@@ -47,12 +44,12 @@ def extract_content_from_pdf(pdf_path):
     except Exception as e:
         return f"Error extracting content from PDF: {str(e)}"
 
-def setup_pdf_extraction_tool():
-    return Tool(
-        name="pdf_extractor",
-        description="Extract content from a PDF file. Input should be a file path.",
-        func=extract_content_from_pdf
-    )
+class ExtractContentFromPDFTool(BaseTool):
+    name: str = "pdf_extractor"
+    description: str = "Extract content from a PDF file. Input should be a file path."
+
+    def _run(self, pdf_path: str) -> str:
+        return extract_content_from_pdf(pdf_path)
 
 # Summarization tool
 def summarize_text(text, max_words=300):
@@ -77,18 +74,19 @@ def summarize_text(text, max_words=300):
     except Exception as e:
         return f"Error during summarization: {str(e)}"
 
-def setup_summarization_tool():
-    return Tool(
-        name="text_summarizer",
-        description="Summarize long text. Input should be text to summarize.",
-        func=summarize_text
-    )
+
+class SummarizationTool(BaseTool):
+    name: str = "text_summarizer"
+    description: str = "Summarize long text. Input should be text to summarize."
+
+    def _run(self, text: str) -> str:
+        return summarize_text(text)
 
 # Get all tools
 def get_all_tools():
     return [
-        setup_search_tool(),
-        setup_web_extraction_tool(),
-        setup_pdf_extraction_tool(),
-        setup_summarization_tool()
+        SearchTool(),
+        ExtractContentFromPDFTool(),
+        SummarizationTool(),
+        WebExtractor()
     ]
