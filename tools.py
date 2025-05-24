@@ -23,12 +23,14 @@ class SearchTool(BaseTool):
 class WebExtractor(BaseTool):
     name: str = "web_extractor"
     description: str = "Extract content from a web page. Input should be a URL."
+    max_length: int = 2000
 
     def _run(self, url: str) -> str:
         try:
             loader = WebBaseLoader(url)
             docs = loader.load()
-            return docs[0].page_content
+            content = docs[0].page_content
+            return content[:self.max_length]
         except Exception as e:
             return f"Error extracting content: {str(e)}"
 

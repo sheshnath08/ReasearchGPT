@@ -38,10 +38,13 @@ def create_research_crew(research_topic, use_memory=True):
     analyst_memory = ConversationBufferMemory(memory_key="chat_history") if use_memory else None
     writer_memory = ConversationBufferMemory(memory_key="chat_history") if use_memory else None
     
+    # Truncate research topic
+    truncated_topic = research_topic[:50]
+    
     # Research Agent
     researcher = Agent(
         role="Senior Research Analyst",
-        goal=f"Find comprehensive and accurate information about {research_topic}",
+        goal=f"Find comprehensive and accurate information about {truncated_topic}",
         backstory="""You are an expert at finding and collecting relevant information 
                    from various sources. You have years of experience in research methodology
                    and know how to evaluate the credibility of sources. You're thorough
@@ -56,7 +59,7 @@ def create_research_crew(research_topic, use_memory=True):
     # Analysis Agent - uses a slightly higher temperature for more creative analysis
     analyst = Agent(
         role="Data Analyst and Synthesizer",
-        goal=f"Analyze and synthesize information about {research_topic} into meaningful insights",
+        goal=f"Analyze and synthesize information about {truncated_topic} into meaningful insights",
         backstory="""You excel at breaking down complex information and identifying key 
                    patterns and insights. You can find connections between disparate 
                    pieces of information and organize them into a coherent structure.
@@ -71,7 +74,7 @@ def create_research_crew(research_topic, use_memory=True):
     # Report Writer Agent
     writer = Agent(
         role="Technical Writer and Editor",
-        goal=f"Create a comprehensive, well-structured report about {research_topic}",
+        goal=f"Create a comprehensive, well-structured report about {truncated_topic}",
         backstory="""You are skilled at organizing information into clear, structured reports 
                    with proper citations. You excel at explaining complex topics in accessible 
                    language without oversimplifying. You have a keen eye for detail and ensure 
@@ -85,7 +88,7 @@ def create_research_crew(research_topic, use_memory=True):
     # Define tasks
     research_task = Task(
         description=f"""
-        Research the topic: {research_topic}
+        Research the topic: {truncated_topic}
 
         Your job is to gather comprehensive information:
 
@@ -113,7 +116,7 @@ def create_research_crew(research_topic, use_memory=True):
 
     analysis_task = Task(
         description=f"""
-        Analyze the research findings on {research_topic}
+        Analyze the research findings on {truncated_topic}
 
         Your job is to synthesize and analyze the information:
 
@@ -141,7 +144,7 @@ def create_research_crew(research_topic, use_memory=True):
 
     report_task = Task(
         description=f"""
-        Create a comprehensive report about {research_topic}
+        Create a comprehensive report about {truncated_topic}
 
         Your job is to create a professional, well-structured report:
 
