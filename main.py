@@ -42,6 +42,9 @@ async def main():
     end_time = time.time()
     elapsed_time = end_time - start_time
     
+    # Convert CrewOutput to string
+    result_str = str(result)
+    
     # Store the final report in the index
     report_metadata = {
         "topic": args.topic,
@@ -49,7 +52,7 @@ async def main():
         "created_at": datetime.now().isoformat(),
         "elapsed_time": elapsed_time
     }
-    research_index.add_document(content=result, metadata=report_metadata)
+    research_index.add_document(content=result_str, metadata=report_metadata)
     
     # Print and save the result
     print("\n")
@@ -61,7 +64,7 @@ async def main():
     # Save the result to a file
     report_filename = os.path.join(session_dir, f"{args.topic.replace(' ', '_')}_report.md")
     with open(report_filename, "w", encoding="utf-8") as f:
-        f.write(result)
+        f.write(result_str)
     
     # Save metadata
     metadata_filename = os.path.join(session_dir, "metadata.json")
@@ -81,4 +84,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-    
